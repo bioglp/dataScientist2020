@@ -1,0 +1,292 @@
+---
+title: "08 data Scientist 08"
+author: "Gianandrea La Porta"
+date: "5/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# ggplot2
+
+The grammar of graphic
+Download the Cheatsheet at this [link](https://rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf)
+
+```{r}
+library(tidyverse)
+data("airquality")
+airq <- as_tibble(airquality)
+```
+
+Questions:
+
+1. What do you want the computer to do?
+2. What must the computer know in order to do that?
+
+3 main components for ggplot:
+
+1. data (that you want to visualize)
+2. aesthetic mappings (describing how variables in the data are mapped)
+3. at least one layer (`geom_*`) which describes how to render each observation (points, lines, polygons, etc.) 
+
+```{r}
+ggplot(data = airq, # data
+       mapping = aes(x=Wind, y=Temp))+ # aesthetic mappings
+  geom_point() # layer
+```
+
+```{r}
+ggplot(data = airq,
+       mapping = aes(x=Wind, y=Temp))+ # copy+paste
+  geom_density2d() # different layer
+```
+
+```{r}
+ggplot(data = airq,
+       mapping = aes(x=Wind, y=Temp))+
+  geom_point(aes(color=Month>6))+
+  labs(title = 'Data air quality', # add a new layer always with +
+       subtitle = 'Year 1973',
+       x='Wind (mph)', y='Temperature (°F)',
+       tag='a)', caption = 'sorce: National ...')
+```
+
+`?labs()`
+
+other aesthetics like:
+- color
+- shape
+- size
+
+#### Challenge #1
+
+Create a scatterplot demand~time, with point size = 6 and points colored 
+in green and put the source name 'BOD dataset' in the caption.
+
+```{r solution 1 error}
+BOD
+ggplot(BOD,aes(x=Time,y=demand))+
+  geom_point(aes(col='green',size=6))+ # inside aes()
+  labs(caption = 'source: BOD dataset')
+```
+
+```{r solution 1}
+ggplot(BOD,aes(x=Time,y=demand))+
+  geom_point(col='green',size=6)+ # outside aes()
+  labs(caption = 'source: BOD dataset')
+```
+
+If an aesthetic is linked to data it is put into `aes()`, while
+if you simply want to set it to a value, put it outside of `aes()`
+
+
+### geom_smooth()
+
+```{r}
+ggplot(data = airq,
+       mapping = aes(x=Wind, y=Temp))+
+  geom_point()+
+  geom_smooth() # loess curve
+```
+
+### Challenge #2
+
+Modify the code to make the points larger squares (size=6) and add 
+a dashed `geom_smooth` curve.
+See `?geom_point` and `?geom_smooth` for more information on the point layer 
+
+```{r solution 2}
+ggplot(data = airq,
+       mapping = aes(x=Wind, y=Temp))+
+  geom_point()+
+  geom_smooth() # loess curve
+```
+
+hint: linetype is controlled by 'linetype'
+hint: remember the difference between mapping and set aesthetics
+
+```{r}
+ggplot(data = airq,
+       mapping = aes(x=Wind, y=Temp))+
+  geom_point(size=6, shape='square', alpha=0.7)+
+  geom_smooth(linetype='dashed') # loess curve
+```
+
+geoms are drawn in the order they are added.
+
+```{r}
+ggplot(data = airq,
+       mapping = aes(x=Wind, y=Temp))+
+  geom_smooth(linetype='dashed')+ # loess curve
+  geom_point(size=6, shape='square', alpha=0.7)
+```
+
+```{r}
+ggplot(data = airq,
+       mapping = aes(x=Wind, y=Temp))+
+  geom_smooth(method='lm', col='white',
+                linetype='dashed')+ # loess curve
+  geom_point(size=6, shape='square', alpha=0.7)
+```
+
+### Challenge #3
+
+BOD 
+Create a barplot using the `geom_col` and color the bars according to the variable `Time`.
+
+```{r}
+ggplot(data=BOD,
+       mapping = aes(x=Time,y=demand))+
+  geom_col(fill=as.factor(BOD$Time))
+```
+
+```{r solution 3}
+ggplot(data=BOD,
+       mapping = aes(x=Time,y=demand))+
+  geom_col(aes(fill=Time))+
+  geom_text(aes(label=demand),
+            col='white',
+            nudge_y = -0.7)
+```
+
+```{r}
+ggplot(data=BOD,
+       mapping = aes(x=Time,y=demand))+
+  geom_col(aes(fill=Time))+
+  geom_text(aes(label=demand),
+            col='white',
+            nudge_y = -1.7)+
+  coord_polar()
+```
+
+### Scales
+
+Scale defines how the mapping you specify inside `aes()` should happen. 
+
+```{r}
+ggplot(airq)+
+  geom_point(aes(x=Temp, y=Wind, color=Temp))
+```
+
+- scale_color_*
+- scale_fill_*
+- scale_shape_*
+- scale_size_*
+
+```{r}
+ggplot(airq)+
+  geom_point(aes(x=Temp, y=Wind, color=Temp))+
+  scale_color_gradient(low = 'blue',
+                       high = 'red',
+                       name = '°F')
+```
+
+```{r}
+ggplot(airq)+
+  geom_point(aes(x=Temp, y=Wind, color=Temp))+
+  scale_color_gradient(low = 'blue',
+                       high = 'red',
+                       name = '°F')+
+  scale_x_continuous(breaks = c(60,80,95))+
+  scale_y_continuous(trans= 'log10')
+```
+
+#### Challenge #4
+
+Load data from `storms` dataset. The data includes the positions and attributes of 198 tropical storms.
+Create a bubble chart (scatterplot with size mapped to a continuous variable) showing:
+
+- `category` maps size and color, 
+- `status` maps shape 
+- and `x=pressure` and `y=wind`.
+
+```{r solution 4}
+data("storms")
+ggplot(storms, mapping = aes(x=pressure, y=wind))+
+  geom_point(aes(size=category, color=category, shape=status),
+             alpha=0.5)
+```
+
+#### Palettes
+`RColorBrewer()`
+
+```{r}
+RColorBrewer::display.brewer.all()
+```
+
+```{r}
+library(RColorBrewer)
+data("storms")
+ggplot(storms, mapping = aes(x=pressure, y=wind))+
+  geom_point(aes(size=category, color=category, shape=status),
+             alpha=0.5)+
+  scale_color_brewer(palette = 'BuPu')
+```
+
+### Theme
+
+Theming defines the feel and look of your final plot.
+
+```{r}
+ggplot(airq, aes(x=Temp, y=Wind))+
+  geom_point(size=5, col='yellowgreen')+
+  geom_point()+
+  labs(title='Air quality')+
+  theme_linedraw(base_size = 18,
+                 base_family = 'Times New Roman')
+```
+
+Install new themes from ggthemes
+
+```{r}
+# install.packages('ggtheme')
+ggplot(airq, aes(x=Temp, y=Wind))+
+  geom_point(size=5, col='white')+
+  geom_point()+
+  labs(title='Air quality')+
+  ggthemes::theme_economist(base_size = 14)
+```
+
+### Facetting
+
+Faceting creates tables of graphics by splitting the data into subsets and displaying 
+the same graph for each subset.
+
+```{r}
+ggplot(airq, aes(x=Temp, y=Wind))+
+  geom_point(size=5, col='white')+
+  geom_point()+
+  facet_wrap(~Month)
+```
+
+### ggplot2 and tidyverse packages
+
+ggplot2 works perfectly together with the other tidyverse packages, so pipe data directly
+into the ggplot call.
+
+Test
+dataset = storms
+filter data -- month>6, month<10
+plot(x=wind, y=pressure)
+facet_grid with month~status
+
+
+```{r}
+storms %>% 
+  filter(month>6,month<10) %>% 
+  ggplot(aes(x=wind, y=pressure))+
+  geom_point(aes(col=pressure))+
+  facet_grid(month~status)
+```
+
+Explore other geometries...
+`geom_boxplot()`
+`geom_jitter()`
+
+Check the website [ggplot2](https://ggplot2.tidyverse.org/reference/index.html) for more info
+and in addition I strongly recommend everybody to read this book authored by H. Wickham 
+"ggplot2: Elegant Graphics for Data Analysis" at https://ggplot2-book.org
+
+

@@ -1,0 +1,225 @@
+---
+title: "Data Scientist #7"
+author: "Gianandrea La Porta"
+date: "4/27/2020"
+output: 
+  bookdown::html_document2: 
+    number_sections: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+# chapter - basics
+
+## Tasks
+
+Large number of tasks:
+
+- create notebook, in which you can run R code
+- make slide for presentations
+- write journal articles
+- authoring books (e.g. phD thesis)
+- generate website or blogs
+
+## Text formats
+
+- *italics*
+- **bold text**
+- H~3~PO~4~
+- Cu^2+^
+- $\pi$
+
+### Chunk for R code
+```{r pressure-plot, fig.align='center', fig.cap='This is the figure caption'}
+plot(pressure, main='plot title')
+```
+
+```{r}
+# install.packages('bookdown')
+library(bookdown)
+```
+
+As you can see in fig. \@ref(fig:pressure-plot).
+
+### Resources
+https://rmarkdown.rstudio.com/lesson-1.html
+https://bookdown.org/yihui/rmarkdown-cookbook/
+
+# New topic
+
+ifelse(test_expression,x,y)
+```{r}
+ob <- 6
+ifelse(ob==3,'Ok','Bad')
+```
+
+# CLUSTER ANALYSIS $\alpha$
+
+The goal of the cluster analysis is to identify groups...
+
+```{r}
+library(vegan)
+data("varechem")
+varechem
+```
+
+## Distance methods
+
+Calculation of distance matrix with dist(). This function computes and returns the distance matrix computed by using the specified distance measure to compute the distances between the rows of a data matrix.
+
+The distance can be measured with:
+
+- "euclidean",
+- "maximum",
+- "manhattan", 
+- ...
+
+```{r}
+varechem.st <- scale(varechem)
+# method = 'euclidean'
+varechem.dist <- dist(varechem.st, method = 'euclidean')
+round(varechem.dist,2)
+```
+
+Create an image of dist matrix
+
+```{r}
+varechem.dist.m <- as.matrix(varechem.dist)
+dim(varechem.dist.m)
+image(1:24,1:24,varechem.dist.m,
+      xlab = 'site number',
+      ylab = 'site number',
+      main='Distance matrix')
+```
+
+## Hierarchical cluster analysis
+
+Hierarchical cluster analysis on a set of dissimilarities and methods for analyzing it.
+
+Methods:
+- "ward.D", 
+- "ward.D2", 
+- "single", 
+- "complete", 
+- "average" (= UPGMA)
+- ...
+
+```{r}
+vare.clust <- hclust(varechem.dist, method = 'complete')
+vare.clust
+plot(vare.clust)
+```
+```{r}
+plot(vare.clust, ylab='Distance', sub='', hang = -1)
+rect.hclust(vare.clust, k=4, border = 'red')
+```
+
+```{r}
+#install.packages("factoextra")
+library(factoextra)
+fviz_dend(vare.clust, k=4, y='Distance')
+fviz_dend(vare.clust, k=4, y='Distance', type = 'circ')
+fviz_dend(vare.clust, k=4, y='Distance', type = 'phyl')
+```
+
+### Challange
+```{r}
+par(mfrow=c(1,2))
+# cluster
+plot(vare.clust, ylab='Distance', sub='', hang = -1)
+rect.hclust(vare.clust, k=4, border = 'red')
+
+# PCA biplot
+biplot(rda(varechem,scale = T), main='PCA')
+```
+
+# ChemoSpec
+An R Package for Chemometric Analysis of Spectra (NMR, IR etc).
+
+Import data:
+- files2SpectraObject()
+- matrix2SpectraObject()
+
+
+```{r}
+library(ChemoSpec)
+data("SrE.IR")
+SrE.IR
+sumSpectra(SrE.IR)
+```
+
+SrE.IR - A collection of 14 IR and NMR spectra of essential oil extracted from the palm Serenoa repens or Saw Palmetto, which is commonly used to treat BPH in men. The 14 spectra are of different retail samples, and are divided into two categories based upon the label description: adSrE, adulterated extract, and pSrE, pure extract. The adulterated samples typically have olive oil added to them, which is inactive towards BPH. There are two additional spectra included as references/outliers: evening primrose oil, labeled EPO in the data set, and olive oil, labeled OO. These latter two oils are mixtures of triglycerides for the most part, while the SrE samples are largely fatty acids. As a result, the spectra of these two groups are subtly different.
+
+```{r}
+SrE.IR$names
+
+plotSpectra(SrE.IR,
+     main='Serenoa repens IR study',
+     which=c(1,2,14,16),
+     yrange=c(0,1.6),
+     offset = 0.4,
+     lab.pos=2200)
+```
+
+## Data pre-Processing
+
+1. baseline correction
+2. data normalizaion
+3. scale the data
+4. bin the data
+
+```{r}
+SrE.IR2 <- baselineSpectra(SrE.IR, int=F,
+                           method='modpolyfit', retC = T)
+```
+
+```{r}
+HCA <- hcaSpectra(SrE.IR2,
+           c.method = 'complete',
+           d.method = 'euclidean',
+           main='Cluster')
+```
+
+# PCA on Spectra
+
+- classical methods - c_pcaSpectra()
+- robust methods - r_pcaSpectra()
+
+```{r}
+c_res <- c_pcaSpectra(SrE.IR2, choice = 'noscale')
+c_res
+summary(c_res)
+```
+
+Plot the scores
+```{r}
+plotScores(SrE.IR2, c_res, pcs = c(1, 2),
+           ellipse='cls', tol=1,
+           main='Classical method')
+abline(h=0,v=0,lty=2)
+```
+
+For more info see: ChemoSpec package
