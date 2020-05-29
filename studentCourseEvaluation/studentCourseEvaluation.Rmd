@@ -1,0 +1,113 @@
+---
+title: "Data Scientist with R"
+author: "PhD in Chemical Sciences - Student Evaluation"
+date: "May 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+library(tidyverse)
+dsSurvey <- read_csv('dataSurvey.csv')
+ds <- pivot_longer(dsSurvey[,1:8],cols = 1:8, names_to = 'Question')
+```
+
+```{r}
+plotAnswers <- function(question, rate=FALSE) {
+   dsQ <- ds %>% 
+    filter(Question==question)
+
+values <- rep(NA,5)
+for(i in 1:5){
+    values[i] <- length(dsQ$value[dsQ$value==i])
+}
+if(rate==FALSE){
+    cases <- c('1. Strongly disagree',
+               '2','3','4',
+               '5. Strongly agree')
+} else {
+    cases <- c('1',
+               '2','3','4',
+               '5')
+    
+}
+tibble(case=cases,n=values) %>% 
+    ggplot(aes(x=case,y=n))+
+    geom_col(fill='forestgreen')+
+    geom_text(aes(label=n), nudge_y = -0.5, col='white')+
+    theme_minimal()+
+    labs(title = question, x='') 
+}
+```
+
+
+### Q1
+
+```{r}
+question <- 'The instructor stimulated my interest in the subject'
+plotAnswers(question)
+```
+
+### Q2
+
+```{r}
+question <- 'The instructor was organized and prepared for every class'
+plotAnswers(question)
+```
+
+### Q3
+
+```{r}
+question <- 'The instructor challenged students to do their best work'
+plotAnswers(question)
+```
+
+### Q4
+
+```{r}
+question <- 'The instructor gave guidance on where to find resources'
+plotAnswers(question)
+```
+
+### Q5
+
+```{r}
+question <- 'The course was delivered as outlined in the syllabus'
+plotAnswers(question)
+```
+
+### Q6
+
+```{r}
+question <- 'How do you rate your experience in this course?'
+plotAnswers(question, rate = T)
+```
+
+### Q7
+
+```{r}
+question <- 'I feel I am achieving the learning outcomes'
+plotAnswers(question)
+```
+
+### Q8
+
+```{r}
+question <- 'I would like to continue with other lessons on further statistical topics'
+plotAnswers(question)
+```
+
+### Q9
+**What changes would you recommend to improve this course?**
+
+1. I wouldn't change anything on it
+2. I would like more challenges between two lesson, because is very stimulating
+3. Nessun consiglio in particolare per migliorare le modalità di svolgimento del corso. Il programma svolto in così poche lezioni ci darà sicuramente la possibilità di approfondire gli argomenti trattati. Sicuramente avrei interesse nel continuare ad approfondire ed ampliare le mie conoscenze di statistica e R. E avrei interesse sopratutto per gli argomenti di analisi multivarita, cluster analysis, GLM.
+4. I would suggest to the lecturer to provide more examples with strong application on science (i.e. from his researsh field, there should be many from it), rather than proposing exercises of classic kind (although well explained to the students).
+
+### Q10
+**Any further, constructive comment**
+
+1. I’d like to extend the course, deepening other topics through the use of packages available in R. If there was the possibility of extending the course hours, or organizing another one in the next few months, I would be totally available.
+2. It would be really interesting other lessons or another course where further investigate statistical and data science analysis
+3. Il corso è stato molto interessante e ben fatto, ho apprezzato il taglio molto pratico e il fatto che si sono toccati diversi argomenti. Anche l'idea delle challenge per permettere un migliore apprendimento è da apprezzare.
